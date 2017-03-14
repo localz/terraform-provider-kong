@@ -1,3 +1,19 @@
+# TODO
+Terraform currently doesn't support nested TypeMaps ([see here](https://github.com/hashicorp/hil/pull/42), and [here](https://github.com/hashicorp/terraform/pull/11704)).
+This makes it difficult to add support for Kong plugins like [Request Transformer]() which have complex bodies, as it's not possibly to have Terraform config like:
+
+```
+config {
+  add {
+    headers = ["x-new-headers:some,value"]
+  }
+}
+```
+
+The above results in `expected type 'string', got unconvertible type '[]map[string]interface {}'`
+
+It's possible to work around this by using the `TypeSet` type, and storing a list of key value pairs (`TypeList` of `TypeSet`) and converting them to maps, but I think this is overly complex and it would be better to wait for Hashicorp to add support for complex structures.
+
 # Terraform provider for Kong
 
 Uses [Terraform](http://www.terraform.io) to configure APIs in [Kong](http://www.getkong.org). It fully supports creating APIs and consumers, but plugins and credentials are not complete (most plugins will work though).
