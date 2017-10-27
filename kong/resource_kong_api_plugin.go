@@ -14,6 +14,7 @@ type Plugin struct {
 	Name          string                 `json:"name,omitempty"`
 	Configuration map[string]interface{} `json:"config,omitempty"`
 	API           string                 `json:"-"`
+	Consumer      string                 `json:"consumer_id,omitempty"`
 }
 
 func resourceKongPlugin() *schema.Resource {
@@ -23,10 +24,21 @@ func resourceKongPlugin() *schema.Resource {
 		Update: resourceKongPluginUpdate,
 		Delete: resourceKongPluginDelete,
 
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"id": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			"consumer": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     nil,
+				Description: "The id of the consumer to scope this plugin to.",
 			},
 
 			"name": &schema.Schema{
@@ -45,7 +57,8 @@ func resourceKongPlugin() *schema.Resource {
 
 			"api": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Default:  nil,
 			},
 		},
 	}
@@ -58,12 +71,18 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 
 	createdPlugin := getPluginFromResourceData(d)
 
-	response, error := sling.New().BodyJSON(plugin).Path("apis/").Path(plugin.API + "/").Post("plugins/").ReceiveSuccess(createdPlugin)
+	request := sling.New().BodyJSON(plugin)
+	if plugin.API != "" {
+		request = request.Path("apis/").Path(plugin.API + "/")
+	}
+	response, error := request.Post("plugins/").ReceiveSuccess(createdPlugin)
 	if error != nil {
 		return fmt.Errorf("error while creating plugin: " + error.Error())
 	}
 
-	if response.StatusCode != http.StatusCreated {
+	if response.StatusCode == http.StatusConflict {
+		return fmt.Errorf("409 Conflict - use terraform import to manage this plugin.")
+	} else if response.StatusCode != http.StatusCreated {
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 
@@ -84,12 +103,15 @@ func resourceKongPluginRead(d *schema.ResourceData, meta interface{}) error {
         configuration[key] = value
     }
 
-	response, error := sling.New().Path("apis/").Path(plugin.API + "/").Path("plugins/").Get(plugin.ID).ReceiveSuccess(plugin)
+	response, error := sling.New().Path("plugins/").Get(plugin.ID).ReceiveSuccess(plugin)
 	if error != nil {
 		return fmt.Errorf("error while updating plugin: " + error.Error())
 	}
 
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode == http.StatusNotFound {
+		d.SetId("")
+		return nil
+	} else if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 
@@ -107,7 +129,7 @@ func resourceKongPluginUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	updatedPlugin := getPluginFromResourceData(d)
 
-	response, error := sling.New().BodyJSON(plugin).Path("apis/").Path(plugin.API + "/").Path("plugins/").Patch(plugin.ID).ReceiveSuccess(updatedPlugin)
+	response, error := sling.New().BodyJSON(plugin).Path("plugins/").Patch(plugin.ID).ReceiveSuccess(updatedPlugin)
 	if error != nil {
 		return fmt.Errorf("error while updating plugin: " + error.Error())
 	}
@@ -128,7 +150,7 @@ func resourceKongPluginDelete(d *schema.ResourceData, meta interface{}) error {
 
 	plugin := getPluginFromResourceData(d)
 
-	response, error := sling.New().Path("apis/").Path(plugin.API + "/").Path("plugins/").Delete(plugin.ID).ReceiveSuccess(nil)
+	response, error := sling.New().Path("plugins/").Delete(plugin.ID).ReceiveSuccess(nil)
 	if error != nil {
 		return fmt.Errorf("error while deleting plugin: " + error.Error())
 	}
@@ -145,6 +167,7 @@ func getPluginFromResourceData(d *schema.ResourceData) *Plugin {
 		Name:          d.Get("name").(string),
 		Configuration: d.Get("config").(map[string]interface{}),
 		API:           d.Get("api").(string),
+		Consumer:      d.Get("consumer").(string),
 	}
 
 	if id, ok := d.GetOk("id"); ok {
@@ -159,4 +182,5 @@ func setPluginToResourceData(d *schema.ResourceData, plugin *Plugin) {
 	d.Set("name", plugin.Name)
 	d.Set("config", plugin.Configuration)
 	d.Set("api", plugin.API)
+	d.Set("consumer", plugin.Consumer)
 }

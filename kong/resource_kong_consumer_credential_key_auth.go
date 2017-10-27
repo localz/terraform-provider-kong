@@ -21,6 +21,10 @@ func resourceKongKeyAuthCredential() *schema.Resource {
 		Update: resourceKongKeyAuthCredentialUpdate,
 		Delete: resourceKongKeyAuthCredentialDelete,
 
+		Importer: &schema.ResourceImporter{
+			State: ImportConsumerCredential,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"id": &schema.Schema{
 				Type:     schema.TypeString,
@@ -73,7 +77,10 @@ func resourceKongKeyAuthCredentialRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error while updating keyAuthCredential.")
 	}
 
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode == http.StatusNotFound {
+		d.SetId("")
+		return nil
+	} else if response.StatusCode != http.StatusOK {
 		return fmt.Errorf(response.Status)
 	}
 
