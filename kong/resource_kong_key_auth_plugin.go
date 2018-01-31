@@ -29,33 +29,33 @@ func resourceKongKeyAuthPlugin() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
+			"id": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"key_names": {
+			"key_names": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				Default:     nil,
 				Description: "The name of the API key header to use.",
 			},
 
-			"hide_credentials": {
+			"hide_credentials": &schema.Schema{
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     nil,
 				Description: "Whether credentials should be hidden.",
 			},
 
-			"anonymous": {
+			"anonymous": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
 				Description: "String (consumer UUID) to use as an anonymous 'consumer', if authentication fails.",
 			},
 
-			"api": {
+			"api": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  nil,

@@ -41,6 +41,7 @@ func Provider() terraform.ResourceProvider {
 			"kong_sni":                            resourceKongSNI(),
 			"kong_upstream":                       resourceKongUpstream(),
 			"kong_target":                         resourceKongTarget(),
+			"kong_api_plugin_statsd":              resourceKongPluginStatsd(),
 		},
 
 		ConfigureFunc: providerConfigure,

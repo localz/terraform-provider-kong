@@ -21,6 +21,9 @@ install:
   - go get net/rpc
   - echo $(pwd)
 script:
+  - echo "----" Unit Tests ----"
+  - make tests
+  - echo "----" Fuctional Tests ----"
   - docker-compose up -d
   - sleep 1m
   - ./start.sh init apply
