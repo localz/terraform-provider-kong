@@ -464,7 +464,11 @@
 			"path": "github.com/satori/go.uuid",
 			"revision": "d0f5b23b72fe781aaea9e07bdd648e376a0f50a8",
 			"revisionTime": "2017-05-08T14:04:04Z"
+		},
+		{
+			"path": "github.com/terraform-providers/terraform-provider-template/template",
+			"revision": ""
 		}
 	],
-	"rootPath": "github.com/martinivanov/terraform-provider-kong"
+	"rootPath": "github.com/localz/terraform-provider-kong"
 }

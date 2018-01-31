@@ -6,23 +6,32 @@ Uses [Terraform](http://www.terraform.io) to configure APIs in [Kong](http://www
 go build -o tests/terraform-provider-kong
 ```
 
+## Run unit test
+``` Shell
+make test
+```
+
 ## Compile and terraform plan / apply
 
 ### Start kong
-
 
 ```Shell
 docker-compose up -d
 ```
 
-## Run plan
+### Run terraform/init plan
 ```Shell
-./start plan
+./start init plan
 ```
 
-## Run apply
+### Run terraform/init apply
 ```Shell
-./start apply
+./start init apply
+```
+
+### Run terraform/tests apply
+```Shell
+./start tests apply
 ```
 
 ## Example usage

@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-// Plugin : Kong API plugin request object structure
-type Plugin struct {
+// Plugin : Kong API plugin statsd request object structure
+type PluginStatsd struct {
 	ID            string                 `json:"id,omitempty"`
 	Name          string                 `json:"name,omitempty"`
 	Configuration map[string]interface{} `json:"config,omitempty"`
@@ -17,12 +17,12 @@ type Plugin struct {
 	Consumer      string                 `json:"consumer_id,omitempty"`
 }
 
-func resourceKongPlugin() *schema.Resource {
+func resourceKongPluginStatsd() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceKongPluginCreate,
-		Read:   resourceKongPluginRead,
-		Update: resourceKongPluginUpdate,
-		Delete: resourceKongPluginDelete,
+		Create: resourceKongPluginStatsdCreate,
+		Read:   resourceKongPluginStatsdRead,
+		Update: resourceKongPluginStatsdUpdate,
+		Delete: resourceKongPluginStatsdDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -64,7 +64,7 @@ func resourceKongPlugin() *schema.Resource {
 	}
 }
 
-func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceKongPluginStatsdCreate(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
 	plugin := getPluginFromResourceData(d)
@@ -93,7 +93,7 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceKongPluginRead(d *schema.ResourceData, meta interface{}) error {
+func resourceKongPluginStatsdRead(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
 	plugin := getPluginFromResourceData(d)
@@ -122,7 +122,7 @@ func resourceKongPluginRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceKongPluginUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceKongPluginStatsdUpdate(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
 	plugin := getPluginFromResourceData(d)
@@ -145,7 +145,7 @@ func resourceKongPluginUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceKongPluginDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceKongPluginStatsdDelete(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
 	plugin := getPluginFromResourceData(d)
@@ -162,7 +162,7 @@ func resourceKongPluginDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func getPluginFromResourceData(d *schema.ResourceData) *Plugin {
+func getPluginFromResourceStatsdData(d *schema.ResourceData) *Plugin {
 	plugin := &Plugin{
 		Name:          d.Get("name").(string),
 		Configuration: d.Get("config").(map[string]interface{}),
@@ -177,7 +177,7 @@ func getPluginFromResourceData(d *schema.ResourceData) *Plugin {
 	return plugin
 }
 
-func setPluginToResourceData(d *schema.ResourceData, plugin *Plugin) {
+func setPluginToResourceStatsdData(d *schema.ResourceData, plugin *Plugin) {
 	d.SetId(plugin.ID)
 	d.Set("name", plugin.Name)
 	d.Set("config", plugin.Configuration)
