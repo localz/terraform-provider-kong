@@ -34,3 +34,4 @@ terraform-provider-kong
 
 .idea
 dist/
+.terraform
