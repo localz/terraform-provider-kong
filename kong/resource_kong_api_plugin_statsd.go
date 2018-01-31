@@ -8,13 +8,22 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-// Plugin : Kong API plugin statsd request object structure
+// PluginStatsd : Kong API PluginStatsd request object structure
 type PluginStatsd struct {
-	ID            string                 `json:"id,omitempty"`
-	Name          string                 `json:"name,omitempty"`
-	Configuration map[string]interface{} `json:"config,omitempty"`
-	API           string                 `json:"-"`
-	Consumer      string                 `json:"consumer_id,omitempty"`
+	ID         string `json:"id,omitempty"`
+	Name       string `json:"name,omitempty"`
+	ConsumerID string `json:"consumer_id,omitempty"`
+	API        string `json:"-"`
+	Config     struct {
+		Host    string `json:"host,omitempty"`
+		Port    string `json:"port,omitempty"`
+		Prefix  string `json:"prefix,omitempty"`
+		Metrics []struct {
+			SampleRate int    `json:"sample_rate,omitempty"`
+			Name       string `json:"name,omitempty"`
+			StatType   string `json:"stat_type,omitempty"`
+		} `json:"metrics"`
+	} `json:"config"`
 }
 
 func resourceKongPluginStatsd() *schema.Resource {
@@ -23,10 +32,6 @@ func resourceKongPluginStatsd() *schema.Resource {
 		Read:   resourceKongPluginStatsdRead,
 		Update: resourceKongPluginStatsdUpdate,
 		Delete: resourceKongPluginStatsdDelete,
-
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"id": &schema.Schema{
@@ -48,18 +53,18 @@ func resourceKongPluginStatsd() *schema.Resource {
 				Description: "The name of the plugin to use.",
 			},
 
-			"config": &schema.Schema{
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     schema.TypeString,
-				Default:  nil,
-			},
-
 			"api": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  nil,
 			},
+
+			// "config": &schema.Schema{
+			// 	Type:     schema.TypeMap,
+			// 	Optional: true,
+			// 	Elem:     schema.TypeString,
+			// 	Default:  nil,
+			// },
 		},
 	}
 }
