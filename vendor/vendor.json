@@ -474,6 +474,11 @@
 		{
 			"path": "github.com/terraform-providers/terraform-provider-template/template",
 			"revision": ""
+		},
+		{
+			"checksumSHA1": "utJ3wfGeTfik4Qzb/+kcXN3NWJM=",
+			"path": "net/rpc",
+			"revision": ""
 		}
 	],
 	"rootPath": "github.com/localz/terraform-provider-kong"
