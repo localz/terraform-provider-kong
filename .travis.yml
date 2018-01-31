@@ -22,7 +22,7 @@ install:
   - echo $(pwd)
 script:
   - echo "----" Unit Tests ----"
-  - make tests
+  - make test
   - echo "----" Fuctional Tests ----"
   - docker-compose up -d
   - sleep 1m
