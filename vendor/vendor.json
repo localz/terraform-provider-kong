@@ -225,6 +225,12 @@
 			"revisionTime": "2017-05-08T14:04:04Z"
 		},
 		{
+			"checksumSHA1": "xTdKLI1gAJOTqswvr15a/fI8ucA=",
+			"path": "github.com/hashicorp/go-hclog",
+			"revision": "5bcb0f17e36442247290887cc914a6e507afa5c4",
+			"revisionTime": "2018-01-22T23:24:01Z"
+		},
+		{
 			"checksumSHA1": "lrSl49G23l6NhfilxPM0XFs5rZo=",
 			"origin": "github.com/hashicorp/terraform/vendor/github.com/hashicorp/go-multierror",
 			"path": "github.com/hashicorp/go-multierror",
@@ -474,6 +480,12 @@
 		{
 			"path": "github.com/terraform-providers/terraform-provider-template/template",
 			"revision": ""
+		},
+		{
+			"checksumSHA1": "TudZOVOvOvR5zw7EFbvD3eZpmLI=",
+			"path": "github.com/zclconf/go-cty/cty",
+			"revision": "709e4033eeb037dc543dbc2048065dfb814ce316",
+			"revisionTime": "2018-01-06T05:58:34Z"
 		},
 		{
 			"checksumSHA1": "utJ3wfGeTfik4Qzb/+kcXN3NWJM=",
