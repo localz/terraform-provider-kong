@@ -36,12 +36,16 @@ func Provider() terraform.ResourceProvider {
 			"kong_consumer_key_auth_credential":   resourceKongKeyAuthCredential(),
 			"kong_consumer_jwt_credential":        resourceKongJWTCredential(),
 			"kong_api_plugin_key_auth":            resourceKongKeyAuthPlugin(),
+<<<<<<< HEAD
 			"kong_consumer_acl_group":             resourceKongConsumerACLGroup(),
 			"kong_certificate":                    resourceKongCertificate(),
 			"kong_sni":                            resourceKongSNI(),
 			"kong_upstream":                       resourceKongUpstream(),
 			"kong_target":                         resourceKongTarget(),
 			"kong_api_plugin_statsd":              resourceKongPluginStatsd(),
+=======
+			//"kong_api_plugin_statsd":              resourceKongPluginStatsd(),
+>>>>>>> reverted vendor changes
 		},
 
 		ConfigureFunc: providerConfigure,
