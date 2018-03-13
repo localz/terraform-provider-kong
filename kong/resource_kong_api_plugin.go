@@ -6,6 +6,7 @@ import (
 
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform/helper/schema"
+	"log"
 )
 
 // Plugin : Kong API plugin request object structure
@@ -71,11 +72,12 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 
 	createdPlugin := getPluginFromResourceData(d)
 
-	request := sling.New().BodyJSON(plugin)
+	request := sling.New().BodyJSON(*plugin)
 	if plugin.API != "" {
 		request = request.Path("apis/").Path(plugin.API + "/")
 	}
 	response, error := request.Post("plugins/").ReceiveSuccess(createdPlugin)
+	
 	if error != nil {
 		return fmt.Errorf("error while creating plugin: " + error.Error())
 	}
@@ -86,7 +88,7 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 
-    createdPlugin.Configuration = plugin.Configuration
+	createdPlugin.Configuration = plugin.Configuration
 
 	setPluginToResourceData(d, createdPlugin)
 
@@ -98,10 +100,10 @@ func resourceKongPluginRead(d *schema.ResourceData, meta interface{}) error {
 
 	plugin := getPluginFromResourceData(d)
 
-    configuration := make(map[string]interface{})
-    for key, value := range plugin.Configuration {
-        configuration[key] = value
-    }
+	configuration := make(map[string]interface{})
+	for key, value := range plugin.Configuration {
+		configuration[key] = value
+	}
 
 	response, error := sling.New().Path("plugins/").Get(plugin.ID).ReceiveSuccess(plugin)
 	if error != nil {
@@ -115,7 +117,7 @@ func resourceKongPluginRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 
-    plugin.Configuration = configuration
+	plugin.Configuration = configuration
 
 	setPluginToResourceData(d, plugin)
 
@@ -138,7 +140,7 @@ func resourceKongPluginUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 
-    updatedPlugin.Configuration = plugin.Configuration
+	updatedPlugin.Configuration = plugin.Configuration
 
 	setPluginToResourceData(d, updatedPlugin)
 

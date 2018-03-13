@@ -417,6 +417,12 @@
 			"revisionTime": "2017-05-08T14:04:04Z"
 		},
 		{
+			"checksumSHA1": "44g0m8BMNAvCR9QYAsJCABsJBx8=",
+			"path": "github.com/jeanphorn/log4go",
+			"revision": "617cc1d0be3c03ef4a409aec8c3fccea0aa36de7",
+			"revisionTime": "2017-11-19T12:01:22Z"
+		},
+		{
 			"checksumSHA1": "0ZrwvB6KoGPj2PoDNSEJwxQ6Mog=",
 			"origin": "github.com/hashicorp/terraform/vendor/github.com/jmespath/go-jmespath",
 			"path": "github.com/jmespath/go-jmespath",
@@ -464,7 +470,13 @@
 			"path": "github.com/satori/go.uuid",
 			"revision": "d0f5b23b72fe781aaea9e07bdd648e376a0f50a8",
 			"revisionTime": "2017-05-08T14:04:04Z"
+		},
+		{
+			"checksumSHA1": "XqTDLy8bXAGifWuqK+OgvxOFgeU=",
+			"path": "github.com/toolkits/file",
+			"revision": "a5b3c5147e07f934d9f9d00b901a20b2529f1a57",
+			"revisionTime": "2016-03-25T03:37:39Z"
 		}
 	],
-	"rootPath": "github.com/martinivanov/terraform-provider-kong"
+	"rootPath": "github.com/localz/terraform-provider-kong"
 }
