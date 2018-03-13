@@ -88,3 +88,17 @@ resource "kong_api_plugin" "rate_limiting" {
     day = "1000"
   }
 }
+
+
+resource "kong_api_plugin" "statsd" {
+  api = "${kong_api.api.id}"
+  name = "statsd"
+
+  config = {
+    host = "DOCKERFILE"
+    metrics = "request_count,unique_users"
+  }
+}
+
+
+

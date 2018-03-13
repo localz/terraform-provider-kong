@@ -6,6 +6,7 @@ import (
 
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform/helper/schema"
+	"log"
 )
 
 // Plugin : Kong Service/API plugin request object structure
@@ -89,7 +90,7 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 
 	createdPlugin := getPluginFromResourceData(d)
 
-	request := sling.New().BodyJSON(plugin)
+	request := sling.New().BodyJSON(*plugin)
 	if plugin.API != "" {
 		request = request.Path("apis/").Path(plugin.API + "/")
 	} else if plugin.Service != "" {
@@ -99,6 +100,7 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	response, error := request.Post("plugins/").ReceiveSuccess(createdPlugin)
+	
 	if error != nil {
 		return fmt.Errorf("error while creating plugin: " + error.Error())
 	}
