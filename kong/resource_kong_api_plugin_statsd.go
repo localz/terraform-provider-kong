@@ -7,7 +7,6 @@ import (
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform/helper/schema"
 	"log"
-	"io"
 )
 
 // Plugin : Kong API statsd plugin request object structure
