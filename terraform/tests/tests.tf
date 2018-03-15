@@ -90,14 +90,21 @@ resource "kong_api_plugin" "rate_limiting" {
 }
 
 
-resource "kong_api_plugin" "statsd" {
+resource "kong_api_plugin_statsd" "statsd" {
   api = "${kong_api.api.id}"
   name = "statsd"
 
   config = {
     host = "DOCKERFILE"
-    metrics = "request_count,unique_users"
   }
+
+  metrics = [
+    {
+      name = "request_count"
+      sample_rate = 10
+      stat_type = "counter"
+    }
+  ]
 }
 
 
