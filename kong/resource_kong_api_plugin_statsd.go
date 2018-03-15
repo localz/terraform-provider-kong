@@ -6,23 +6,36 @@ import (
 
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform/helper/schema"
+	"log"
+	"io"
 )
 
-// Plugin : Kong API plugin request object structure
-type Plugin struct {
-	ID            string                 `json:"id,omitempty"`
-	Name          string                 `json:"name,omitempty"`
-	Configuration map[string]interface{} `json:"config,omitempty"`
-	API           string                 `json:"-"`
-	Consumer      string                 `json:"consumer_id,omitempty"`
+// Plugin : Kong API statsd plugin request object structure
+type StatsdPlugin struct {
+	Id                    string    `json:"id,omitempty"`
+	ApiId                 string    `json:"-"`
+	ConsumerId            string    `json:"consumer_id,omitempty"`
+	Name                  string    `json:"name"`
+	Config struct {
+		Host              string    `json:"host,omitempty"`
+		Port              string    `json:"host,omitempty"`
+		Prefix            string    `json:"host,omitempty"`
+		Metrics 		  []Metrics	`json:"metrics,omitempty"`
+	}                               `json:"config,omitempty"`
 }
 
-func resourceKongPlugin() *schema.Resource {
+type Metrics []struct {
+	Name          string `json:"name,omitempty"`
+	SampleRate    int    `json:"sample_rate,omitempty"`
+	StatType      string `json:"stat_type,omitempty"`
+}
+
+func resourceKongStatsdPlugin() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceKongPluginCreate,
-		Read:   resourceKongPluginRead,
-		Update: resourceKongPluginUpdate,
-		Delete: resourceKongPluginDelete,
+		Create: resourceKongStatsdPluginCreate,
+		Read:   resourceKongStatsdPluginRead,
+		Update: resourceKongStatsdPluginUpdate,
+		Delete: resourceKongStatsdPluginDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -34,7 +47,7 @@ func resourceKongPlugin() *schema.Resource {
 				Computed: true,
 			},
 
-			"consumer": &schema.Schema{
+			"consumer_id": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     nil,
@@ -55,6 +68,28 @@ func resourceKongPlugin() *schema.Resource {
 				Default:  nil,
 			},
 
+			"metrics": &schema.Schema{
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"sample_rate": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"stat_type": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				Default:  nil,
+			},
+
 			"api": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -64,17 +99,20 @@ func resourceKongPlugin() *schema.Resource {
 	}
 }
 
-func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceKongStatsdPluginCreate(d *schema.ResourceData, meta interface{}) error {
+	log.Println("[DEBUG] STEVE resourceKongStatsdPluginCreate ", *d)
+
 	sling := meta.(*sling.Sling)
+	plugin := getStatsdPluginFromResourceData(d)
 
-	plugin := getPluginFromResourceData(d)
-
-	createdPlugin := getPluginFromResourceData(d)
+	createdPlugin := plugin
 
 	request := sling.New().BodyJSON(*plugin)
-	if plugin.API != "" {
-		request = request.Path("apis/").Path(plugin.API + "/")
+	if plugin.ApiId != "" {
+		request = request.Path("apis/").Path(plugin.ApiId + "plugins/")
 	}
+
+	log.Println("[DEBUG] STEVE request", request)
 	response, error := request.Post("plugins/").ReceiveSuccess(createdPlugin)
 	
 	if error != nil {
@@ -87,14 +125,14 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 
-	createdPlugin.Configuration = plugin.Configuration
+	createdPlugin.Config = plugin.Config
 
-	setPluginToResourceData(d, createdPlugin)
+	setStatsdPluginToResourceData(d, createdPlugin)
 
 	return nil
 }
 
-func resourceKongPluginRead(d *schema.ResourceData, meta interface{}) error {
+func resourceKongStatsdPluginRead(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
 	plugin := getPluginFromResourceData(d)
@@ -123,7 +161,7 @@ func resourceKongPluginRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceKongPluginUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceKongStatsdPluginUpdate(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
 	plugin := getPluginFromResourceData(d)
@@ -146,7 +184,7 @@ func resourceKongPluginUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceKongPluginDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceKongStatsdPluginDelete(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
 	plugin := getPluginFromResourceData(d)
@@ -163,25 +201,33 @@ func resourceKongPluginDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func getPluginFromResourceData(d *schema.ResourceData) *Plugin {
-	plugin := &Plugin{
-		Name:          d.Get("name").(string),
-		Configuration: d.Get("config").(map[string]interface{}),
-		API:           d.Get("api").(string),
-		Consumer:      d.Get("consumer").(string),
+func getStatsdPluginFromResourceData(d *schema.ResourceData) *StatsdPlugin {
+	log.Println("[DEBUG] getStatsdPluginFromResourceData: ", *d)
+
+	plugin := &StatsdPlugin{
+		Name:          		d.Get("name").(string),
+		ApiId:          	d.Get("api").(string),
+		ConsumerId:      	d.Get("consumer_id").(string),
 	}
 
+	plugin.Config.Host = d.Get("config.host").(string)
+	plugin.Config.Port = d.Get("config.port").(string)
+	//plugin.Config.Metrics = d.Get("config.metrics").([]Metrics)
+
 	if id, ok := d.GetOk("id"); ok {
-		plugin.ID = id.(string)
+		plugin.Id = id.(string)
 	}
 
 	return plugin
 }
 
-func setPluginToResourceData(d *schema.ResourceData, plugin *Plugin) {
-	d.SetId(plugin.ID)
-	d.Set("name", plugin.Name)
-	d.Set("config", plugin.Configuration)
-	d.Set("api", plugin.API)
-	d.Set("consumer", plugin.Consumer)
+func setStatsdPluginToResourceData(d *schema.ResourceData, statsdPlugin *StatsdPlugin) {
+	d.SetId(statsdPlugin.Id)
+	d.Set("name", statsdPlugin.Name)
+	d.Set("api", statsdPlugin.ApiId)
+	d.Set("consumer_id", statsdPlugin.ConsumerId)
+
+	d.Set("config.host", statsdPlugin.Config.Host)
+	d.Set("config.port", statsdPlugin.Config.Port)
+	d.Set("metrics", statsdPlugin.Config.Metrics)
 }
