@@ -3,10 +3,12 @@ package kong
 import (
 	"fmt"
 	"net/http"
+	"encoding/json"
 
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform/helper/schema"
 	"log"
+	//"strings"
 )
 
 // Plugin : Kong API statsd plugin request object structure
@@ -17,16 +19,14 @@ type StatsdPlugin struct {
 	Name                  string    `json:"name"`
 	Config struct {
 		Host              string    `json:"host,omitempty"`
-		Port              string    `json:"host,omitempty"`
-		Prefix            string    `json:"host,omitempty"`
-		Metrics 		  []Metrics	`json:"metrics,omitempty"`
+		Port              int       `json:"port,omitempty"`
+		Prefix            string    `json:"prefix,omitempty"`
+		Metrics []struct {
+			Name       string 		`json:"name,omitempty"`
+			SampleRate int 		    `json:"sample_rate,omitempty"`
+			StatType   string 		`json:"stat_type,omitempty"`
+		} `json:"metrics"`
 	}                               `json:"config,omitempty"`
-}
-
-type Metrics []struct {
-	Name          string `json:"name,omitempty"`
-	SampleRate    int    `json:"sample_rate,omitempty"`
-	StatType      string `json:"stat_type,omitempty"`
 }
 
 func resourceKongStatsdPlugin() *schema.Resource {
@@ -99,21 +99,21 @@ func resourceKongStatsdPlugin() *schema.Resource {
 }
 
 func resourceKongStatsdPluginCreate(d *schema.ResourceData, meta interface{}) error {
-	log.Println("[DEBUG] STEVE resourceKongStatsdPluginCreate ", *d)
 
 	sling := meta.(*sling.Sling)
 	plugin := getStatsdPluginFromResourceData(d)
-
+	b, err := json.Marshal(plugin)
+	log.Println("[DEBUG] steve: ", string(b))
+	log.Println("[ERROR] steve: ", err)
 	createdPlugin := plugin
 
 	request := sling.New().BodyJSON(*plugin)
 	if plugin.ApiId != "" {
-		request = request.Path("apis/").Path(plugin.ApiId + "plugins/")
+		request = request.Path("apis/").Path(plugin.ApiId + "/")
 	}
 
-	log.Println("[DEBUG] STEVE request", request)
 	response, error := request.Post("plugins/").ReceiveSuccess(createdPlugin)
-	
+
 	if error != nil {
 		return fmt.Errorf("error while creating plugin: " + error.Error())
 	}
@@ -121,7 +121,7 @@ func resourceKongStatsdPluginCreate(d *schema.ResourceData, meta interface{}) er
 	if response.StatusCode == http.StatusConflict {
 		return fmt.Errorf("409 Conflict - use terraform import to manage this plugin.")
 	} else if response.StatusCode != http.StatusCreated {
-		return fmt.Errorf("unexpected status code received: " + response.Status)
+		return fmt.Errorf("unexpected status code received on create: " + response.Status)
 	}
 
 	createdPlugin.Config = plugin.Config
@@ -134,14 +134,9 @@ func resourceKongStatsdPluginCreate(d *schema.ResourceData, meta interface{}) er
 func resourceKongStatsdPluginRead(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
-	plugin := getPluginFromResourceData(d)
+	plugin := getStatsdPluginFromResourceData(d)
 
-	configuration := make(map[string]interface{})
-	for key, value := range plugin.Configuration {
-		configuration[key] = value
-	}
-
-	response, error := sling.New().Path("plugins/").Get(plugin.ID).ReceiveSuccess(plugin)
+	response, error := sling.New().Path("plugins/").Get(plugin.Id).ReceiveSuccess(plugin)
 	if error != nil {
 		return fmt.Errorf("error while updating plugin: " + error.Error())
 	}
@@ -153,9 +148,7 @@ func resourceKongStatsdPluginRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 
-	plugin.Configuration = configuration
-
-	setPluginToResourceData(d, plugin)
+	setStatsdPluginToResourceData(d, plugin)
 
 	return nil
 }
@@ -163,11 +156,12 @@ func resourceKongStatsdPluginRead(d *schema.ResourceData, meta interface{}) erro
 func resourceKongStatsdPluginUpdate(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
-	plugin := getPluginFromResourceData(d)
+	plugin := getStatsdPluginFromResourceData(d)
 
-	updatedPlugin := getPluginFromResourceData(d)
+	updatedPlugin := getStatsdPluginFromResourceData(d)
+	log.Println("[DEBUG] steve: ", plugin)
 
-	response, error := sling.New().BodyJSON(plugin).Path("plugins/").Patch(plugin.ID).ReceiveSuccess(updatedPlugin)
+	response, error := sling.New().BodyJSON(plugin).Path("plugins/").Patch(plugin.Id).ReceiveSuccess(updatedPlugin)
 	if error != nil {
 		return fmt.Errorf("error while updating plugin: " + error.Error())
 	}
@@ -176,9 +170,7 @@ func resourceKongStatsdPluginUpdate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("unexpected status code received: " + response.Status)
 	}
 
-	updatedPlugin.Configuration = plugin.Configuration
-
-	setPluginToResourceData(d, updatedPlugin)
+	setStatsdPluginToResourceData(d, updatedPlugin)
 
 	return nil
 }
@@ -186,9 +178,9 @@ func resourceKongStatsdPluginUpdate(d *schema.ResourceData, meta interface{}) er
 func resourceKongStatsdPluginDelete(d *schema.ResourceData, meta interface{}) error {
 	sling := meta.(*sling.Sling)
 
-	plugin := getPluginFromResourceData(d)
+	plugin := getStatsdPluginFromResourceData(d)
 
-	response, error := sling.New().Path("plugins/").Delete(plugin.ID).ReceiveSuccess(nil)
+	response, error := sling.New().Path("plugins/").Delete(plugin.Id).ReceiveSuccess(nil)
 	if error != nil {
 		return fmt.Errorf("error while deleting plugin: " + error.Error())
 	}
@@ -201,20 +193,28 @@ func resourceKongStatsdPluginDelete(d *schema.ResourceData, meta interface{}) er
 }
 
 func getStatsdPluginFromResourceData(d *schema.ResourceData) *StatsdPlugin {
-	log.Println("[DEBUG] getStatsdPluginFromResourceData: ", *d)
-
 	plugin := &StatsdPlugin{
 		Name:          		d.Get("name").(string),
 		ApiId:          	d.Get("api").(string),
 		ConsumerId:      	d.Get("consumer_id").(string),
 	}
 
-	plugin.Config.Host = d.Get("config.host").(string)
-	plugin.Config.Port = d.Get("config.port").(string)
-	//plugin.Config.Metrics = d.Get("config.metrics").([]Metrics)
-
 	if id, ok := d.GetOk("id"); ok {
 		plugin.Id = id.(string)
+	}
+
+	plugin.Config.Host = d.Get("config.host").(string)
+	//plugin.Config.Port = d.Get("config.port").(string)
+	metrics := d.Get("config.metrics").(string)
+	//metrics = strings.Trim(metrics, "\n")
+
+	//log.Println("[DEBUG] error:", err)
+	log.Println("[DEBUG] metrics:", metrics)
+
+	err := json.Unmarshal([]byte(metrics), &plugin.Config.Metrics)
+
+	if err != nil {
+		log.Println("[ERROR] error: ", err)
 	}
 
 	return plugin
@@ -226,7 +226,6 @@ func setStatsdPluginToResourceData(d *schema.ResourceData, statsdPlugin *StatsdP
 	d.Set("api", statsdPlugin.ApiId)
 	d.Set("consumer_id", statsdPlugin.ConsumerId)
 
-	d.Set("config.host", statsdPlugin.Config.Host)
-	d.Set("config.port", statsdPlugin.Config.Port)
-	d.Set("metrics", statsdPlugin.Config.Metrics)
+	d.Set("config", statsdPlugin.Config)
 }
+

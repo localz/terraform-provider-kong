@@ -96,15 +96,17 @@ resource "kong_api_plugin_statsd" "statsd" {
 
   config = {
     host = "DOCKERFILE"
+    metrics = <<EOF
+  [
+  {
+    "name" : "request_count",
+    "sample_rate" : 10,
+    "stat_type" : "counter"
+  }
+  ]
+EOF
   }
 
-  metrics = [
-    {
-      name = "request_count"
-      sample_rate = 10
-      stat_type = "counter"
-    }
-  ]
 }
 
 
