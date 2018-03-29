@@ -6,7 +6,6 @@ import (
 
 	"github.com/dghubble/sling"
 	"github.com/hashicorp/terraform/helper/schema"
-	"log"
 )
 
 // Plugin : Kong API plugin request object structure
